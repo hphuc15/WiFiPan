@@ -1,41 +1,27 @@
 /**
  * @file example_esp32s3.cpp
- * @brief Example / test application for the WiFiPan library on ESP32-S3.
+ * @brief Test app for WiFiPan on ESP32-S3.
  *
- * Exercises: Manager::Init(), AutoConnect(), ConfigViaAp(), Stop(),
- * StartWebServer()/StopWebServer(), IsConnected(), GetMode(),
- * CurrentIpString(), SetConnectedCb/SetDisconnectedCb, SetStaRetryNum,
- * SetScanMaxCount, SetAdminToken, and Page::AddParam/GetParam.
+ * BOOT button (GPIO0):
+ *   - Held 3s at startup -> ConfigViaAp() instead of AutoConnect()
+ *   - Held 3s any time after -> re-provision (Stop() + ConfigViaAp() again)
  *
- * BOOT button (GPIO0) behavior:
- *   - Held for 3s right at startup  -> force Manager::ConfigViaAp()
- *     instead of Manager::AutoConnect().
- *   - Held for 3s at any time after boot -> re-provision: Stop() the
- *     current connection and open the config portal again
- *     (ConfigViaAp()), useful for testing without a full reflash.
+ * Onboard WS2812 RGB LED shows status (driven directly via RMT, no
+ * external led_strip component needed - only 5 solid colors):
+ *   White  : initializing / waiting on BOOT
+ *   Blue   : AP / captive portal mode
+ *   Yellow : connecting to STA
+ *   Green  : connected
+ *   Red    : disconnected / error
  *
- * Onboard RGB LED (WS2812, via the "espressif/led_strip" managed
- * component) reports status:
- *   White  (blinking) : initializing / waiting to see if BOOT is held
- *   Blue               : AP / captive-portal mode, waiting for credentials
- *   Yellow             : attempting STA connection
- *   Green              : connected
- *   Red    (blinking)  : disconnected / setup failed
- *
- * Add the LED driver dependency, e.g.:
- *   idf.py add-dependency "espressif/led_strip^2.5.0"
- *
- * kRgbLedGpio below matches most ESP32-S3-DevKitC-1 boards (GPIO48).
- * Some earlier board revisions use GPIO38 - check your board's schematic
- * and adjust if the LED does not light up. The led_strip_config_t /
- * led_strip_rmt_config_t field names below match led_strip v2.x; verify
- * against the version actually resolved by your project if it differs.
+ * kRgbLedGpio = GPIO48 matches most ESP32-S3-DevKitC-1 boards (some
+ * revisions use GPIO38 - check your board).
  */
 
 #include "WiFiPan.hpp"
 
 #include "driver/gpio.h"
-#include "led_strip.h"
+#include "driver/rmt_tx.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -45,23 +31,29 @@ namespace
 {
     constexpr const char *kTag = "[EXAMPLE]";
 
-    /* ---- Board pin configuration - adjust to match your board ---- */
     constexpr gpio_num_t kBootButtonGpio = GPIO_NUM_0;   /* Active LOW */
-    constexpr gpio_num_t kRgbLedGpio     = GPIO_NUM_48;  /* Onboard WS2812 */
+    constexpr gpio_num_t kRgbLedGpio     = GPIO_NUM_48;
     constexpr uint32_t   kHoldToConfigMs = 3000;
-    constexpr uint8_t    kLedBrightness  = 32;           /* 0-255, kept low */
+    constexpr uint8_t    kLedBrightness  = 32;
 
-    /* Admin token required for /ota and /reset. Change before real use -
-     * an empty token leaves those endpoints unauthenticated. */
+    /* Change before real use - empty token leaves /ota and /reset open. */
     constexpr const char *kAdminToken = "change-me-1234";
 
-    led_strip_handle_t g_led = nullptr;
+    /* WS2812 bit timings over RMT, 10MHz clock (1 tick = 0.1us). */
+    constexpr uint32_t kRmtResolutionHz = 10 * 1000 * 1000;
+    constexpr uint16_t kWs2812T0hTicks  = 3;
+    constexpr uint16_t kWs2812T0lTicks  = 9;
+    constexpr uint16_t kWs2812T1hTicks  = 9;
+    constexpr uint16_t kWs2812T1lTicks  = 3;
+
+    rmt_channel_handle_t g_led_chan    = nullptr;
+    rmt_encoder_handle_t g_led_encoder = nullptr;
 
     enum class LedColor { Off, White, Blue, Yellow, Green, Red };
 
     void LedSet(LedColor color)
     {
-        if (!g_led) {
+        if (!g_led_chan || !g_led_encoder) {
             return;
         }
         uint8_t r = 0, g = 0, b = 0;
@@ -75,8 +67,13 @@ namespace
         default:
             break;
         }
-        led_strip_set_pixel(g_led, 0, r, g, b);
-        led_strip_refresh(g_led);
+
+        uint8_t grb[3] = { g, r, b }; /* WS2812 wire order: G-R-B, MSB first */
+        rmt_transmit_config_t tx_cfg = {};
+        tx_cfg.loop_count = 0;
+
+        /* Fire-and-forget; queue depth 4 easily absorbs our update rate. */
+        rmt_transmit(g_led_chan, g_led_encoder, grb, sizeof(grb), &tx_cfg);
     }
 
     void LedBlink(LedColor color, int times, int period_ms)
@@ -91,26 +88,45 @@ namespace
 
     void InitLed()
     {
-        led_strip_config_t strip_cfg = {};
-        strip_cfg.strip_gpio_num          = kRgbLedGpio;
-        strip_cfg.max_leds                = 1;
-        strip_cfg.led_model               = LED_MODEL_WS2812;
-        strip_cfg.color_component_format  = LED_STRIP_COLOR_COMPONENT_FMT_GRB;
-        strip_cfg.flags.invert_out        = false;
+        rmt_tx_channel_config_t tx_chan_cfg = {};
+        tx_chan_cfg.clk_src           = RMT_CLK_SRC_DEFAULT;
+        tx_chan_cfg.gpio_num          = kRgbLedGpio;
+        tx_chan_cfg.mem_block_symbols = 64;
+        tx_chan_cfg.resolution_hz     = kRmtResolutionHz;
+        tx_chan_cfg.trans_queue_depth = 4;
 
-        led_strip_rmt_config_t rmt_cfg = {};
-        rmt_cfg.resolution_hz  = 10 * 1000 * 1000;
-        rmt_cfg.flags.with_dma = false;
-
-        if (led_strip_new_rmt_device(&strip_cfg, &rmt_cfg, &g_led) != ESP_OK) {
-            ESP_LOGE(kTag, "Failed to init RGB LED, status reporting disabled");
-            g_led = nullptr;
+        if (rmt_new_tx_channel(&tx_chan_cfg, &g_led_chan) != ESP_OK) {
+            ESP_LOGE(kTag, "Failed to create RMT TX channel, LED disabled");
+            g_led_chan = nullptr;
             return;
         }
-        led_strip_clear(g_led);
+
+        rmt_bytes_encoder_config_t bytes_cfg = {};
+        bytes_cfg.bit0.level0    = 1;
+        bytes_cfg.bit0.duration0 = kWs2812T0hTicks;
+        bytes_cfg.bit0.level1    = 0;
+        bytes_cfg.bit0.duration1 = kWs2812T0lTicks;
+        bytes_cfg.bit1.level0    = 1;
+        bytes_cfg.bit1.duration0 = kWs2812T1hTicks;
+        bytes_cfg.bit1.level1    = 0;
+        bytes_cfg.bit1.duration1 = kWs2812T1lTicks;
+        bytes_cfg.flags.msb_first = 1;
+
+        if (rmt_new_bytes_encoder(&bytes_cfg, &g_led_encoder) != ESP_OK) {
+            ESP_LOGE(kTag, "Failed to create RMT bytes encoder, LED disabled");
+            g_led_chan = nullptr;
+            return;
+        }
+
+        if (rmt_enable(g_led_chan) != ESP_OK) {
+            ESP_LOGE(kTag, "Failed to enable RMT channel, LED disabled");
+            g_led_chan = nullptr;
+            return;
+        }
+
+        LedSet(LedColor::Off);
     }
 
-    /* ---- WiFi connection callbacks - plain function pointers, no user ctx ---- */
     void OnWifiConnected()
     {
         ESP_LOGI(kTag, "WiFi connected callback fired");
@@ -132,9 +148,7 @@ namespace
         gpio_config(&io_cfg);
     }
 
-    /* Blocks briefly at startup to see whether BOOT is held for
-     * kHoldToConfigMs, in which case the caller should use ConfigViaAp()
-     * instead of AutoConnect(). */
+    /* Blocks briefly at startup to check if BOOT is held for kHoldToConfigMs. */
     bool BootButtonHeldForConfig()
     {
         ESP_LOGI(kTag, "Hold BOOT for %lu ms to force the config portal...",
@@ -156,8 +170,7 @@ namespace
         return false;
     }
 
-    /* Registers a couple of dynamic parameters so /config has something to
-     * exercise besides the SSID/password fields. */
+    /* Demo params so /config has fields besides SSID/password to test. */
     void SetupDemoParams(WiFiPan::Manager &wifi)
     {
         wifi.page().AddParam("dev_name", "Device Name", "e.g. sensor-01", "esp32s3-demo", "text", true);
@@ -177,10 +190,7 @@ namespace
         }
     }
 
-    /* Watches BOOT for a 3s hold at any point after boot and, when
-     * detected, re-provisions WiFi by stopping the current connection and
-     * opening the captive portal again. Exercises Stop(), StopWebServer(),
-     * a second ConfigViaAp() call, and StartWebServer(). */
+    /* Watches BOOT for a 3s hold and re-provisions WiFi when detected. */
     void ButtonMonitorTask(void *arg)
     {
         auto *wifi = static_cast<WiFiPan::Manager *>(arg);
@@ -198,7 +208,7 @@ namespace
             }
 
             if (pressed && (esp_timer_get_time() - press_start) / 1000 >= kHoldToConfigMs) {
-                pressed = false; /* consume this press so it doesn't retrigger */
+                pressed = false;
                 ESP_LOGW(kTag, "BOOT held at runtime -> re-provisioning WiFi");
 
                 wifi->StopWebServer();
@@ -259,9 +269,8 @@ extern "C" void app_main()
         LedSet(LedColor::Green);
         ESP_LOGI(kTag, "Connected. IP=%s", wifi.CurrentIpString().c_str());
 
-        /* AutoConnect()/ConfigViaAp() stop the HTTP server once STA is up.
-         * Start it again so /config, /ota and /reset stay reachable on the
-         * STA network for continued testing. */
+        /* Server stops once STA is up; restart it so /config, /ota and
+         * /reset stay reachable on the STA network for testing. */
         wifi.StartWebServer();
     } else {
         LedBlink(LedColor::Red, 6, 400);
@@ -275,12 +284,11 @@ extern "C" void app_main()
     xTaskCreate(PrintStatusTask,   "wifi_status", 3072, &wifi, 3, nullptr);
     xTaskCreate(ButtonMonitorTask, "wifi_button", 4096, &wifi, 3, nullptr);
 
-    /* Endpoints available once connected (admin token required for the
-     * last two):
-     *   http://<device-ip>/            dashboard
-     *   http://<device-ip>/scan        WiFi scan + connect (AP mode)
-     *   http://<device-ip>/config      define / fill custom params
-     *   http://<device-ip>/ota         firmware upload
-     *   http://<device-ip>/reset       erase saved WiFi + reboot to AP
+    /* Endpoints once connected (admin token needed for the last two):
+     *   /        dashboard
+     *   /scan    WiFi scan + connect (AP mode)
+     *   /config  define / fill custom params
+     *   /ota     firmware upload
+     *   /reset   erase saved WiFi + reboot to AP
      */
 }
