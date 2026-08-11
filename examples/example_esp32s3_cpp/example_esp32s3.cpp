@@ -16,6 +16,11 @@
  *
  * kRgbLedGpio = GPIO48 matches most ESP32-S3-DevKitC-1 boards (some
  * revisions use GPIO38 - check your board).
+ *
+ * NOTE: SetAdminToken() and StartWebServer() are commented out below for
+ * now - /ota and /reset run unauthenticated, and the portal doesn't stay
+ * reachable once STA connects. Re-enable both together before relying on
+ * those endpoints. Kept in sync with the C version, example_esp32s3.c.
  */
 
 #include "WiFiPan.hpp"
@@ -36,8 +41,9 @@ namespace
     constexpr uint32_t   kHoldToConfigMs = 3000;
     constexpr uint8_t    kLedBrightness  = 32;
 
-    /* Change before real use - empty token leaves /ota and /reset open. */
-    constexpr const char *kAdminToken = "change-me-1234";
+    /* Change before real use - empty token leaves /ota and /reset open.
+     * Currently unused: SetAdminToken() call is commented out below. */
+    // constexpr const char *kAdminToken = "ota-token";
 
     /* WS2812 bit timings over RMT, 10MHz clock (1 tick = 0.1us). */
     constexpr uint32_t kRmtResolutionHz = 10 * 1000 * 1000;
@@ -218,8 +224,11 @@ namespace
                 WiFiPan::Status st = wifi->ConfigViaAp();
                 if (st == WiFiPan::Status::Ok) {
                     LedSet(LedColor::Green);
-                    wifi->StartWebServer();
+                    // wifi->StartWebServer();
                     ESP_LOGI(kTag, "Re-provisioned, IP=%s", wifi->CurrentIpString().c_str());
+                    ESP_LOGI(kTag, "dev_name=%s report_interval=%s",
+                             wifi->page().GetParam("dev_name"),
+                             wifi->page().GetParam("report_interval"));
                 } else {
                     LedSet(LedColor::Red);
                     ESP_LOGE(kTag, "Re-provisioning failed: %d", static_cast<int>(st));
@@ -253,7 +262,7 @@ extern "C" void app_main()
     wifi.SetDisconnectedCb(OnWifiDisconnected);
     wifi.SetStaRetryNum(5);
     wifi.SetScanMaxCount(15);
-    wifi.SetAdminToken(kAdminToken);
+    // wifi.SetAdminToken(kAdminToken);
 
     SetupDemoParams(wifi);
 
@@ -271,7 +280,7 @@ extern "C" void app_main()
 
         /* Server stops once STA is up; restart it so /config, /ota and
          * /reset stay reachable on the STA network for testing. */
-        wifi.StartWebServer();
+        // wifi.StartWebServer();
     } else {
         LedBlink(LedColor::Red, 6, 400);
         ESP_LOGE(kTag, "WiFi setup failed: %d", static_cast<int>(st));
