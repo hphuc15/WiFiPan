@@ -690,6 +690,14 @@ input[type=text]::placeholder, input[type=password]::placeholder { color: var(--
   transition: color 0.15s, border-color 0.15s;
 }
 .btn-rescan:hover { color: var(--accent); border-color: var(--accent); }
+.back-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.back-link:hover { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -732,7 +740,10 @@ input[type=text]::placeholder, input[type=password]::placeholder { color: var(--
     </div>
     <div class="ft">
       <span class="ft-chip">WIFIPANEL PORTAL</span>
-      <button class="btn-rescan" onclick="doRescan()">&#x21BB; Rescan</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a href="/" class="back-link">&#8592; back</a>
+        <button class="btn-rescan" onclick="doRescan()">&#x21BB; Rescan</button>
+      </div>
     </div>
   </div>
   <div id="screen-status">
@@ -1283,6 +1294,14 @@ textarea.cfg-input { resize: vertical; min-height: 64px; font-family: var(--font
   font-size: 10px;
   color: var(--text-3);
 }
+.back-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.back-link:hover { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -1344,7 +1363,10 @@ textarea.cfg-input { resize: vertical; min-height: 64px; font-family: var(--font
 
     <div class="ft">
       <span class="ft-chip">WIFIPANEL PORTAL</span>
-      <span class="ft-count" id="ft-count">0 params</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a href="/" class="back-link">&#8592; back</a>
+        <span class="ft-count" id="ft-count">0 params</span>
+      </div>
     </div>
   </div>
 
