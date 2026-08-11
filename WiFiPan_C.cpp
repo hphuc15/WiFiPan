@@ -38,7 +38,7 @@ WiFiPan_Status WiFiPan_StartSta(WiFiPan_t *m)
     return ToC(m->impl.StartSta());
 }
 
-WiFiPan_Status WiFiPan_StartAP(WiFiPan_t *m)
+WiFiPan_Status WiFiPan_StartAp(WiFiPan_t *m)
 {
     return ToC(m->impl.StartAp());
 }
@@ -130,10 +130,8 @@ void WiFiPan_SetDisconnectedCb(WiFiPan_t *m, WiFiPan_DisconnectedCb cb)
     m->impl.SetDisconnectedCb(cb);
 }
 
-WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m,
-                                         const char *id, const char *label,
-                                         const char *placeholder, const char *value,
-                                         const char *type, bool required)
+WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m, const char *id, const char *label,
+    const char *placeholder, const char *value, const char *type, bool required)
 {
     return ToC(m->impl.page().AddParam(id, label, placeholder, value, type, required));
 }

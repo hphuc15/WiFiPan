@@ -49,8 +49,8 @@ extern "C"
     void WiFiPan_Destroy(WiFiPan_t *m);
 
     WiFiPan_Status WiFiPan_Init(WiFiPan_t *m);
-    WiFiPan_Status WiFiPan_StartSTA(WiFiPan_t *m);
-    WiFiPan_Status WiFiPan_StartAP(WiFiPan_t *m);
+    WiFiPan_Status WiFiPan_StartSta(WiFiPan_t *m);
+    WiFiPan_Status WiFiPan_StartAp(WiFiPan_t *m);
     WiFiPan_Status WiFiPan_ConfigViaAp(WiFiPan_t *m);
     WiFiPan_Status WiFiPan_AutoConnect(WiFiPan_t *m);
     WiFiPan_Status WiFiPan_Stop(WiFiPan_t *m);
