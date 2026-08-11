@@ -1,7 +1,6 @@
 # WiFiPan
 
-Captive-portal WiFi provisioning component for ESP32 / ESP-IDF, written in C++. Handles AP-mode config portal, DNS redirect for captive-portal detection (iOS / Android / Windows), NVS-persisted STA credentials with auto-reconnect, a dynamic form-field schema for app-specific config, and an OTA firmware
-upload endpoint.
+Captive-portal WiFi provisioning component for ESP32 / ESP-IDF, written in C++, with a C wrapper (`WiFiPan_C`) for pure-C projects. Handles AP-mode config portal, DNS redirect for captive-portal detection (iOS / Android / Windows), NVS-persisted STA credentials with auto-reconnect, a dynamic form-field schema for app-specific config, and an OTA firmware upload endpoint.
 
 ## Features
 
@@ -10,19 +9,25 @@ upload endpoint.
 - **Dynamic fields**: register extra config fields (`Page::AddParam`) that render on `/config` alongside WiFi setup - no HTML editing required.
 - **OTA over HTTP**: `/ota` accepts a `multipart/form-data` firmware upload and flashes it via `esp_ota_*`.
 - **No dynamic allocation for form state**: fixed-size `std::array` storage, bounded by `kMaxParams` / `kFieldLen`.
+- **C wrapper**: `WiFiPan_C.h` / `WiFiPan_C.cpp` expose the same API as plain C functions (`WiFiPan_Create`, `WiFiPan_Init`, `WiFiPan_AutoConnect`, ...).
 
 ## Project layout
 
 ```text
 WiFiPan/
+├── docs/               
+├── examples/           # usage examples
 ├── CMakeLists.txt
+├── LICENSE
 ├── README.md           # API reference and repo description
-├── WiFiPan.hpp         # public API (Manager, Page)
+├── WiFiPan.hpp         # public C++ API (Manager, Page)
 ├── WiFiPan.cpp         # WiFi lifecycle (Init/StartSta/StartAp/ConfigViaAp/AutoConnect)
 ├── WiFiPan_Internal.h  # Manager::Impl - event group, netif, httpd handle (internal only)
 ├── WiFiPan_Page.cpp    # dynamic form-field schema (Page class)
 ├── WiFiPan_Portal.cpp  # HTTP handlers, DNS server, OTA upload
-└── WiFiPan_Html.h      # embedded HTML/JS for the portal pages
+├── WiFiPan_Html.h      # embedded HTML/JS for the portal pages
+├── WiFiPan_C.h         # public C API wrapper
+└── WiFiPan_C.cpp       # C wrapper implementation over Manager
 ```
 
 ## Quick start
@@ -58,6 +63,10 @@ extern "C" void app_main(void)
     // ...
 }
 ```
+
+For a pure-C project, see `examples/example_esp32s3_c/` using the `WiFiPan_C` wrapper; for C++, see `examples/example_esp32s3_cpp/`. Both build against the same `WiFiPan::Manager` under the hood.
+
+> Note: the example apps currently ship with `SetAdminToken()` / `StartWebServer()` commented out (portal auth wiring is still being finalized there) - see `examples/README.md`. The library API itself is functional as shown above.
 
 ## Provisioning flow
 
@@ -109,4 +118,4 @@ enum class Status
 
 ## License
 
-MIT
+cMIT - see [LICENSE](LICENSE).
