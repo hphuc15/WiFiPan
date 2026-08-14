@@ -1,0 +1,12 @@
+version: "1.0.0"
+targets:
+  - esp32
+  - esp32s3
+description: "Captive portal WiFi provisioning library for ESP-IDF"
+url: "https://github.com/hphuc15/WiFiPan"
+repository: "https://github.com/hphuc15/WiFiPan.git"
+files:
+  exclude:
+    - "docs/**/*"
+dependencies:
+  idf: ">=5.0"
