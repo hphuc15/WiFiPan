@@ -30,6 +30,22 @@ WiFiPan/
 └── WiFiPan_C.cpp       # C wrapper implementation over Manager
 ```
 
+## Installation
+
+Add as a managed component via `idf.py`:
+
+```bash
+idf.py add-dependency "hphuc15/wifipan^1.0.0"
+```
+
+Or add manually to your `main/idf_component.yml`:
+
+```yaml
+dependencies:
+  hphuc15/wifipan: "^1.0.0"
+```
+Then just `#include "WiFiPan.hpp"` (or `WiFiPan_C.h` for the C wrapper) as shown below.
+
 ## Quick start
 
 ```cpp
