@@ -118,4 +118,4 @@ enum class Status
 
 ## License
 
-cMIT - see [LICENSE](LICENSE).
+MIT - see [LICENSE](./LICENSE).
