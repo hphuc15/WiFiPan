@@ -4,3 +4,5 @@
 **/.vscode
 **/.devcontainer
 **/dist
+**/private/
+**/private.*/
