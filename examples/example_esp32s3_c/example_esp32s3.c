@@ -31,7 +31,7 @@
  * relying on those endpoints.
  */
 
-#include "WiFiPan_C.h"
+#include "WiFiPan.h"
 
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
