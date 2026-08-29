@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS
-        "WiFiPan.cpp"
+        "WiFiPan_Cpp.cpp"
         "WiFiPan_C.cpp"
         "WiFiPan_Page.cpp"
         "WiFiPan_Portal.cpp"

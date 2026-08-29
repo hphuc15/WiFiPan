@@ -1,5 +1,5 @@
-#ifndef WIFIPAN_H_
-#define WIFIPAN_H_
+#ifndef WIFIPAN_HPP_
+#define WIFIPAN_HPP_
 
 #include <cstdint>
 #include <cstddef>
@@ -192,4 +192,4 @@ namespace WiFiPan
 
 } /* Namespace WiFiPan */
 
-#endif /* WIFIPAN_H_ */
+#endif /* WIFIPAN_HPP_ */

@@ -1,4 +1,4 @@
-#include "WiFiPan_C.h"
+#include "WiFiPan.h"
 #include "WiFiPan.hpp"
 
 #include <cstring>

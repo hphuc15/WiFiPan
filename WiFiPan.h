@@ -1,13 +1,15 @@
-#ifndef WIFIPAN_C_H_
-#define WIFIPAN_C_H_
+#ifndef WIFIPAN_H_
+#define WIFIPAN_H_
 
-/*
- * C API wrapper for WiFiPan::Manager (see WiFiPan.hpp).
+/**
+ * @file WiFiPan.h
+ * @brief Pure C API wrapper for the WiFiPan provisioning library.
  *
- * Safe to #include from .c files - this header contains no C++ syntax.
- * The actual implementation (WiFiPan_C.cpp) is compiled as C++ and just
- * forwards each call to the existing WiFiPan::Manager; no WiFi/portal
- * logic is duplicated here.
+ * Safe to #include from pure C source files (.c) - contains no C++ syntax.
+ * For the full C++ interface (WiFiPan::Manager, WiFiPan::Page), please #include "WiFiPan.hpp".
+ *
+ * The underlying implementation (WiFiPan_C.cpp) is compiled as C++ and forwards
+ * each call to WiFiPan::Manager; no WiFi or portal logic is duplicated.
  */
 
 #include <stdbool.h>
@@ -88,4 +90,4 @@ extern "C"
 }
 #endif
 
-#endif /* WIFIPAN_C_H_ */
+#endif /* WIFIPAN_H_ */
