@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: [dev, WiFiPan]
   pull_request:
+    branches: [WiFiPan]
   workflow_dispatch:
 
 jobs:
@@ -85,17 +86,3 @@ jobs:
           cd examples/${{ matrix.example }}
           idf.py set-target esp32s3
           idf.py build
-
-  publish:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-lib, build-examples]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Upload to ESP Component Registry
-        uses: espressif/upload-components-ga-action@v2
-        with:
-          namespace: "hphuc15"
-          name: "wifipan"
-          api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

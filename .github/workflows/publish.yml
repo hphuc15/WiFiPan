@@ -9,12 +9,34 @@ on:
 
 jobs:
   publish:
+    name: Publish Component & GitHub Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Publish
+
+      - name: Update version in idf_component.yml
+        run: |
+          sed -i 's/^version: .*/version: "${{ github.event.inputs.version }}"/' idf_component.yml
+
+      - name: Sync CHANGELOG to root
+        run: |
+          if [ -f docs/release/CHANGELOG.md ]; then
+            cp docs/release/CHANGELOG.md CHANGELOG.md
+          fi
+
+      - name: Publish to ESP Component Registry
         run: |
           pip install idf-component-manager
           compote component upload --namespace hphuc15 --name WiFiPan
         env:
           IDF_COMPONENT_API_TOKEN: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: WiFiPan v${{ github.event.inputs.version }}
+          body_path: docs/release/RELEASENOTE.md
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
