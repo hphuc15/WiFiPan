@@ -1,13 +1,15 @@
-#ifndef WIFIPAN_C_H_
-#define WIFIPAN_C_H_
+#ifndef WIFIPAN_H_
+#define WIFIPAN_H_
 
-/*
- * C API wrapper for WiFiPan::Manager (see WiFiPan.hpp).
+/**
+ * @file WiFiPan.h
+ * @brief Pure C API wrapper for the WiFiPan provisioning library.
  *
- * Safe to #include from .c files - this header contains no C++ syntax.
- * The actual implementation (WiFiPan_C.cpp) is compiled as C++ and just
- * forwards each call to the existing WiFiPan::Manager; no WiFi/portal
- * logic is duplicated here.
+ * Safe to #include from pure C source files (.c) - contains no C++ syntax.
+ * For the full C++ interface (WiFiPan::Manager, WiFiPan::Page), please #include "WiFiPan.hpp".
+ *
+ * The underlying implementation (WiFiPan_C.cpp) is compiled as C++ and forwards
+ * each call to WiFiPan::Manager; no WiFi or portal logic is duplicated.
  */
 
 #include <stdbool.h>
@@ -28,15 +30,15 @@ extern "C"
     /* Mirrors WiFiPan::Status 1:1 - keep values in sync if that enum changes. */
     typedef enum
     {
-        WIFIPAN_OK = 0,
-        WIFIPAN_INVALID_ARG = -1,
-        WIFIPAN_INIT_FAILED = -2,
-        WIFIPAN_WIFI_ERROR = -3,
-        WIFIPAN_TIMEOUT = -4,
-        WIFIPAN_NO_CREDS = -5,
-        WIFIPAN_NETIF_ERROR = -6,
-        WIFIPAN_NO_MEM = -7,
-        WIFIPAN_CONNECT_FAILED = -8,
+        WIFIPAN_OK               = 0,
+        WIFIPAN_INVALID_ARG      = -1,
+        WIFIPAN_INIT_FAILED      = -2,
+        WIFIPAN_WIFI_ERROR       = -3,
+        WIFIPAN_TIMEOUT          = -4,
+        WIFIPAN_NO_CREDS         = -5,
+        WIFIPAN_NETIF_ERROR      = -6,
+        WIFIPAN_NO_MEM           = -7,
+        WIFIPAN_CONNECT_FAILED   = -8,
         WIFIPAN_WEAK_AP_PASSWORD = -9,
     } WiFiPan_Status;
 
@@ -46,7 +48,7 @@ extern "C"
     /* ---- Lifecycle ---- */
 
     WiFiPan_t *WiFiPan_Create(void);
-    void WiFiPan_Destroy(WiFiPan_t *m);
+    void       WiFiPan_Destroy(WiFiPan_t *m);
 
     WiFiPan_Status WiFiPan_Init(WiFiPan_t *m);
     WiFiPan_Status WiFiPan_StartSta(WiFiPan_t *m);
@@ -55,11 +57,11 @@ extern "C"
     WiFiPan_Status WiFiPan_AutoConnect(WiFiPan_t *m);
     WiFiPan_Status WiFiPan_Stop(WiFiPan_t *m);
 
-    bool WiFiPan_IsConnected(const WiFiPan_t *m);
+    bool        WiFiPan_IsConnected(const WiFiPan_t *m);
     wifi_mode_t WiFiPan_GetMode(const WiFiPan_t *m);
 
     WiFiPan_Status WiFiPan_StartWebServer(WiFiPan_t *m);
-    void WiFiPan_StopWebServer(WiFiPan_t *m);
+    void           WiFiPan_StopWebServer(WiFiPan_t *m);
 
     /* Writes the current IP string ("192.168.4.1" if netif isn't up yet)
      * into out, truncated to out_size. Returns strlen(out) after the copy. */
@@ -78,14 +80,14 @@ extern "C"
 
     /* ---- Dynamic form-field schema (WiFiPan::Page) ---- */
 
-    WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m, const char *id, const char *label,
-        const char *placeholder, const char *value, const char *type, bool required);
-    const char *WiFiPan_Page_GetParam(const WiFiPan_t *m, const char *id);
-    bool WiFiPan_Page_SetParamValue(WiFiPan_t *m, const char *id, const char *value);
-    size_t WiFiPan_Page_Count(const WiFiPan_t *m);
+    WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m, const char *id, const char *label, const char *placeholder,
+                                         const char *value, const char *type, bool required);
+    const char    *WiFiPan_Page_GetParam(const WiFiPan_t *m, const char *id);
+    bool           WiFiPan_Page_SetParamValue(WiFiPan_t *m, const char *id, const char *value);
+    size_t         WiFiPan_Page_Count(const WiFiPan_t *m);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* WIFIPAN_C_H_ */
+#endif /* WIFIPAN_H_ */

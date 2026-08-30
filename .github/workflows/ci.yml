@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, WiFiPan]
+  pull_request:
+    branches: [WiFiPan]
+  workflow_dispatch:
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check C/C++ formatting
+        uses: DoozyX/clang-format-lint-action@v0.18
+        with:
+          source: '.'
+          extensions: 'c,h,cpp,hpp'
+          clangFormatVersion: 17
+          exclude: './examples/*/build'
+
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install idf-component-manager
+        run: pip install idf-component-manager
+
+      - name: Validate idf_component.yml
+        run: compote manifest lint idf_component.yml
+
+  build-lib:
+    needs: [format-check, validate-manifest]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        idf_version: ["release-v5.4", "release-v5.5"]
+        target: [esp32, esp32s3]
+    container:
+      image: espressif/idf:${{ matrix.idf_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: WiFiPan
+
+      - name: Scaffold a throwaway host project and drop the component in
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          idf.py create-project -p /tmp/hosttest hosttest
+          mkdir -p /tmp/hosttest/components
+          cp -r WiFiPan /tmp/hosttest/components/WiFiPan
+          echo 'idf_component_register(SRCS "main.c" INCLUDE_DIRS "." REQUIRES WiFiPan)' \
+            > /tmp/hosttest/main/CMakeLists.txt
+          echo 'void app_main(void) {}' > /tmp/hosttest/main/main.c
+
+      - name: Build (${{ matrix.target }}, ${{ matrix.idf_version }})
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          cd /tmp/hosttest
+          idf.py set-target ${{ matrix.target }}
+          idf.py build
+
+  build-examples:
+    needs: [format-check, validate-manifest]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        idf_version: ["release-v5.4", "release-v5.5"]
+        example: [example_esp32s3_c, example_esp32s3_cpp]
+    container:
+      image: espressif/idf:${{ matrix.idf_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.example }}
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          cd examples/${{ matrix.example }}
+          idf.py set-target esp32s3
+          idf.py build
+
+  build-lib-done:
+    needs: build-lib
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All build-lib matrix jobs passed"
+
+  build-examples-done:
+    needs: build-examples
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All build-examples matrix jobs passed"

@@ -1,4 +1,4 @@
-#include "WiFiPan_C.h"
+#include "WiFiPan.h"
 #include "WiFiPan.hpp"
 
 #include <cstring>
@@ -80,7 +80,8 @@ void WiFiPan_StopWebServer(WiFiPan_t *m)
 
 size_t WiFiPan_CurrentIpString(const WiFiPan_t *m, char *out, size_t out_size)
 {
-    if (!out || out_size == 0) {
+    if (!out || out_size == 0)
+    {
         return 0;
     }
     std::string ip = m->impl.CurrentIpString();
@@ -91,14 +92,16 @@ size_t WiFiPan_CurrentIpString(const WiFiPan_t *m, char *out, size_t out_size)
 
 void WiFiPan_SetApConfig(WiFiPan_t *m, const wifi_ap_config_t *cfg)
 {
-    if (cfg) {
+    if (cfg)
+    {
         m->impl.SetApConfig(*cfg);
     }
 }
 
 void WiFiPan_SetStaConfig(WiFiPan_t *m, const wifi_sta_config_t *cfg)
 {
-    if (cfg) {
+    if (cfg)
+    {
         m->impl.SetStaConfig(*cfg);
     }
 }
@@ -130,8 +133,8 @@ void WiFiPan_SetDisconnectedCb(WiFiPan_t *m, WiFiPan_DisconnectedCb cb)
     m->impl.SetDisconnectedCb(cb);
 }
 
-WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m, const char *id, const char *label,
-    const char *placeholder, const char *value, const char *type, bool required)
+WiFiPan_Status WiFiPan_Page_AddParam(WiFiPan_t *m, const char *id, const char *label, const char *placeholder,
+                                     const char *value, const char *type, bool required)
 {
     return ToC(m->impl.page().AddParam(id, label, placeholder, value, type, required));
 }

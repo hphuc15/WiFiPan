@@ -1,0 +1,49 @@
+---
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 120
+AccessModifierOffset: -4
+
+# Brace on its own new line for functions, classes, namespaces, control
+# statements — matches the existing style throughout the repo.
+BreakBeforeBraces: Allman
+
+# `namespace WiFiPan { ... }` contents are indented one level in this repo.
+NamespaceIndentation: All
+
+# Don't force `// namespace X` — the repo uses `} /* WiFiPan */` block
+# comments after closing namespaces; leave those alone instead of rewriting.
+FixNamespaceComments: false
+
+# `esp_netif_t *netif`, not `esp_netif_t* netif`.
+PointerAlignment: Right
+ReferenceAlignment: Right
+DerivePointerAlignment: false
+
+# Preserve the hand-aligned columns seen in structs/enums
+# (e.g. `EventBits_t kEventBitStaStart        = BIT0;`).
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignTrailingComments: true
+
+# Don't reorder #include blocks — several files rely on a specific
+# include order (internal headers before IDF/FreeRTOS headers, etc.).
+SortIncludes: false
+
+IndentCaseLabels: true
+SpaceBeforeParens: ControlStatements
+Cpp11BracedListStyle: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never

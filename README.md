@@ -9,7 +9,7 @@ Captive-portal WiFi provisioning component for ESP32 / ESP-IDF, written in C++, 
 - **Dynamic fields**: register extra config fields (`Page::AddParam`) that render on `/config` alongside WiFi setup - no HTML editing required.
 - **OTA over HTTP**: `/ota` accepts a `multipart/form-data` firmware upload and flashes it via `esp_ota_*`.
 - **No dynamic allocation for form state**: fixed-size `std::array` storage, bounded by `kMaxParams` / `kFieldLen`.
-- **C wrapper**: `WiFiPan_C.h` / `WiFiPan_C.cpp` expose the same API as plain C functions (`WiFiPan_Create`, `WiFiPan_Init`, `WiFiPan_AutoConnect`, ...).
+- **C wrapper**: `WiFiPan.h` / `WiFiPan_C.cpp` expose the same API as plain C functions (`WiFiPan_Create`, `WiFiPan_Init`, `WiFiPan_AutoConnect`, ...).
 
 ## Project layout
 
@@ -20,14 +20,14 @@ WiFiPan/
 ├── CMakeLists.txt
 ├── LICENSE
 ├── README.md           # API reference and repo description
-├── WiFiPan.hpp         # public C++ API (Manager, Page)
-├── WiFiPan.cpp         # WiFi lifecycle (Init/StartSta/StartAp/ConfigViaAp/AutoConnect)
+├── WiFiPan.h           # public C API wrapper (entry point for C)
+├── WiFiPan.hpp         # public C++ API (entry point for C++)
+├── WiFiPan_C.cpp       # C wrapper implementation over Manager
+├── WiFiPan_Cpp.cpp     # C++ core implementation (WiFi lifecycle)
 ├── WiFiPan_Internal.h  # Manager::Impl - event group, netif, httpd handle (internal only)
 ├── WiFiPan_Page.cpp    # dynamic form-field schema (Page class)
 ├── WiFiPan_Portal.cpp  # HTTP handlers, DNS server, OTA upload
-├── WiFiPan_Html.h      # embedded HTML/JS for the portal pages
-├── WiFiPan_C.h         # public C API wrapper
-└── WiFiPan_C.cpp       # C wrapper implementation over Manager
+└── WiFiPan_Html.h      # embedded HTML/JS for the portal pages
 ```
 
 ## Installation
@@ -44,7 +44,7 @@ Or add manually to your `main/idf_component.yml`:
 dependencies:
   hphuc15/wifipan: "^1.0.0"
 ```
-Then just `#include "WiFiPan.hpp"` (or `WiFiPan_C.h` for the C wrapper) as shown below.
+Then just `#include "WiFiPan.hpp"` (or `#include "WiFiPan.h"` for the C wrapper) as shown below.
 
 ## Quick start
 
