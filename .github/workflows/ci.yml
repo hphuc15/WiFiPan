@@ -29,7 +29,7 @@ jobs:
         run: pip install idf-component-manager
 
       - name: Validate idf_component.yml
-        run: compote manifest validate
+        run: compote manifest lint idf_component.yml
 
   build-lib:
     needs: [format-check, validate-manifest]
