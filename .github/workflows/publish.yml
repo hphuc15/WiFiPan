@@ -34,7 +34,7 @@ jobs:
       - name: Publish to ESP Component Registry
         run: |
           pip install idf-component-manager
-          compote component upload --namespace hphuc15 --name WiFiPan
+          compote component upload --namespace hphuc15 --name WiFiPan --allow-existing
         env:
           IDF_COMPONENT_API_TOKEN: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
 
