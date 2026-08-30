@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        idf_version: ["release-v5.1", "release-v5.2", "release-v5.3"]
+        idf_version: ["release-v5.4", "release-v5.5"]
         target: [esp32, esp32s3]
     container:
       image: espressif/idf:${{ matrix.idf_version }}
