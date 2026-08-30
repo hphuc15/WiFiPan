@@ -86,3 +86,15 @@ jobs:
           cd examples/${{ matrix.example }}
           idf.py set-target esp32s3
           idf.py build
+
+  build-lib-done:
+    needs: build-lib
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All build-lib matrix jobs passed"
+
+  build-examples-done:
+    needs: build-examples
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All build-examples matrix jobs passed"
