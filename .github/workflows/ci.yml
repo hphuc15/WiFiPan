@@ -29,10 +29,11 @@ jobs:
         run: pip install idf-component-manager
 
       - name: Validate idf_component.yml
-        run: compote manifest validate --path idf_component.yml
+        run: compote manifest validate
 
   build-lib:
     needs: [format-check, validate-manifest]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +67,7 @@ jobs:
 
   build-examples:
     needs: [format-check, validate-manifest]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
