@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check C/C++ formatting
+        uses: DoozyX/clang-format-lint-action@v0.18
+        with:
+          source: '.'
+          extensions: 'c,h,cpp,hpp'
+          clangFormatVersion: 17
+          exclude: './examples/*/build'
+
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install idf-component-manager
+        run: pip install idf-component-manager
+
+      - name: Validate idf_component.yml
+        run: compote manifest validate --path idf_component.yml
+
+  build-lib:
+    needs: [format-check, validate-manifest]
+    strategy:
+      fail-fast: false
+      matrix:
+        idf_version: ["release-v5.1", "release-v5.2", "release-v5.3"]
+        target: [esp32, esp32s3]
+    container:
+      image: espressif/idf:${{ matrix.idf_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: WiFiPan
+
+      - name: Scaffold a throwaway host project and drop the component in
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          idf.py create-project -p /tmp/hosttest hosttest
+          mkdir -p /tmp/hosttest/components
+          cp -r WiFiPan /tmp/hosttest/components/WiFiPan
+          echo 'idf_component_register(SRCS "main.c" INCLUDE_DIRS "." REQUIRES WiFiPan)' \
+            > /tmp/hosttest/main/CMakeLists.txt
+          echo 'void app_main(void) {}' > /tmp/hosttest/main/main.c
+
+      - name: Build (${{ matrix.target }}, ${{ matrix.idf_version }})
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          cd /tmp/hosttest
+          idf.py set-target ${{ matrix.target }}
+          idf.py build
+
+  build-examples:
+    needs: [format-check, validate-manifest]
+    strategy:
+      fail-fast: false
+      matrix:
+        idf_version: ["release-v5.1", "release-v5.2", "release-v5.3"]
+        example: [example_esp32s3_c, example_esp32s3_cpp]
+    container:
+      image: espressif/idf:${{ matrix.idf_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.example }}
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          cd examples/${{ matrix.example }}
+          idf.py set-target esp32s3
+          idf.py build
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-lib, build-examples]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload to ESP Component Registry
+        uses: espressif/upload-components-ga-action@v2
+        with:
+          namespace: "hphuc15"
+          name: "wifipan"
+          api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
