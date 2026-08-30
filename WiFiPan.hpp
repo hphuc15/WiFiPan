@@ -15,35 +15,35 @@
 namespace WiFiPan
 {
     /* Configuration constants */
-    inline constexpr const char *kApSsidDefault = "ESP32_Config";
-    inline constexpr const char *kApPasswordDefault = "ESP32_Config";
-    inline constexpr uint8_t kApMaxStaCon = 1;
-    inline constexpr size_t kMaxParams = 10;
-    inline constexpr size_t kFieldLen = 128;
-    inline constexpr size_t kPortalBodySize = 1024;
-    inline constexpr uint32_t kPortalTimeoutMs = 5UL * 60UL * 1000UL;
-    inline constexpr uint16_t kScanDefaultMax = 10;
-    inline constexpr uint32_t kApStartTimeoutMs    = 30UL * 1000UL;
-    inline constexpr uint32_t kStaConnectTimeoutMs = 30UL * 1000UL;
-    inline constexpr size_t kAdminTokenLen = 32;
+    inline constexpr const char *kApSsidDefault       = "ESP32_Config";
+    inline constexpr const char *kApPasswordDefault   = "ESP32_Config";
+    inline constexpr uint8_t     kApMaxStaCon         = 1;
+    inline constexpr size_t      kMaxParams           = 10;
+    inline constexpr size_t      kFieldLen            = 128;
+    inline constexpr size_t      kPortalBodySize      = 1024;
+    inline constexpr uint32_t    kPortalTimeoutMs     = 5UL * 60UL * 1000UL;
+    inline constexpr uint16_t    kScanDefaultMax      = 10;
+    inline constexpr uint32_t    kApStartTimeoutMs    = 30UL * 1000UL;
+    inline constexpr uint32_t    kStaConnectTimeoutMs = 30UL * 1000UL;
+    inline constexpr size_t      kAdminTokenLen       = 32;
 
     /* Status code */
     enum class Status
     {
-        Ok = 0,
-        InvalidArg = -1,
-        InitFailed = -2,
-        WifiError = -3,
-        Timeout = -4,
-        NoCreds = -5,
-        NetifError = -6,
-        NoMem = -7,
-        ConnectFailed = -8,
+        Ok             = 0,
+        InvalidArg     = -1,
+        InitFailed     = -2,
+        WifiError      = -3,
+        Timeout        = -4,
+        NoCreds        = -5,
+        NetifError     = -6,
+        NoMem          = -7,
+        ConnectFailed  = -8,
         WeakApPassword = -9
     };
 
     /* Callbacks */
-    using ConnectedCb = void (*)(void);
+    using ConnectedCb    = void (*)(void);
     using DisconnectedCb = void (*)(void);
 
     class Page
@@ -55,12 +55,13 @@ namespace WiFiPan
             std::array<char, kFieldLen> label{};
             std::array<char, kFieldLen> placeholder{};
             std::array<char, kFieldLen> value{};
-            std::array<char, 16> type{};
-            bool required = false;
+            std::array<char, 16>        type{};
+            bool                        required = false;
         };
 
         /** @brief Add a dynamic input field to the portal form. */
-        Status AddParam(const char *id, const char *label, const char *placeholder, const char *value, const char *type, bool required);
+        Status AddParam(const char *id, const char *label, const char *placeholder, const char *value, const char *type,
+                        bool required);
 
         /** @brief Look up a field value by id. Returns nullptr if not found. */
         const char *GetParam(const char *id) const;
@@ -78,12 +79,18 @@ namespace WiFiPan
         /** Build the "<script>window.wifiparam_schema=...</script>" injection. */
         std::string BuildConfigInject() const;
 
-        size_t count() const { return used_; }
-        const Param &operator[](size_t i) const { return params_[i]; }
+        size_t count() const
+        {
+            return used_;
+        }
+        const Param &operator[](size_t i) const
+        {
+            return params_[i];
+        }
 
     private:
         std::array<Param, kMaxParams> params_{};
-        size_t used_ = 0;
+        size_t                        used_ = 0;
     };
 
     class Manager
@@ -92,10 +99,10 @@ namespace WiFiPan
         Manager();
         ~Manager();
 
-        Manager(const Manager &) = delete;
+        Manager(const Manager &)            = delete;
         Manager &operator=(const Manager &) = delete;
-        Manager(Manager &&) = delete;
-        Manager &operator=(Manager &&) = delete;
+        Manager(Manager &&)                 = delete;
+        Manager &operator=(Manager &&)      = delete;
 
         /* ---------------- WiFi lifecycle ---------------- */
 
@@ -113,23 +120,50 @@ namespace WiFiPan
         /** Connect using saved NVS credentials; falls back to ConfigViaAp() on failure. */
         Status AutoConnect();
         /** Stop WiFi and unregister all event handlers. */
-        Status Stop();
-        bool IsConnected() const;
+        Status      Stop();
+        bool        IsConnected() const;
         wifi_mode_t GetMode() const;
 
         /* ---------------- Configuration ---------------- */
 
-        void SetApConfig(const wifi_ap_config_t &cfg) { ap_config_ = cfg; }
-        void SetStaConfig(const wifi_sta_config_t &cfg) { sta_config_ = cfg; }
-        void SetStaRetryNum(int n) { sta_retry_num_ = n; }
-        void SetScanMaxCount(uint16_t n) { scan_max_count_ = n; }
+        void SetApConfig(const wifi_ap_config_t &cfg)
+        {
+            ap_config_ = cfg;
+        }
+        void SetStaConfig(const wifi_sta_config_t &cfg)
+        {
+            sta_config_ = cfg;
+        }
+        void SetStaRetryNum(int n)
+        {
+            sta_retry_num_ = n;
+        }
+        void SetScanMaxCount(uint16_t n)
+        {
+            scan_max_count_ = n;
+        }
 
-        const wifi_ap_config_t &ApConfig() const { return ap_config_; }
-        const wifi_sta_config_t &StaConfig() const { return sta_config_; }
-        uint16_t ScanMaxCount() const { return scan_max_count_; }
+        const wifi_ap_config_t &ApConfig() const
+        {
+            return ap_config_;
+        }
+        const wifi_sta_config_t &StaConfig() const
+        {
+            return sta_config_;
+        }
+        uint16_t ScanMaxCount() const
+        {
+            return scan_max_count_;
+        }
 
-        void SetConnectedCb(ConnectedCb cb) { connected_cb_ = cb; }
-        void SetDisconnectedCb(DisconnectedCb cb) { disconnected_cb_ = cb; }
+        void SetConnectedCb(ConnectedCb cb)
+        {
+            connected_cb_ = cb;
+        }
+        void SetDisconnectedCb(DisconnectedCb cb)
+        {
+            disconnected_cb_ = cb;
+        }
 
         /** Optional token required (as header "X-Admin-Token" or query "?token=")
          *  to call /ota and /reset. Empty (default) = no auth, NOT recommended
@@ -139,10 +173,19 @@ namespace WiFiPan
             std::strncpy(admin_token_.data(), token ? token : "", admin_token_.size() - 1);
             admin_token_[admin_token_.size() - 1] = '\0';
         }
-        const char *AdminToken() const { return admin_token_.data(); }
+        const char *AdminToken() const
+        {
+            return admin_token_.data();
+        }
 
-        Page &page() { return page_; }
-        const Page &page() const { return page_; }
+        Page &page()
+        {
+            return page_;
+        }
+        const Page &page() const
+        {
+            return page_;
+        }
 
         /* ---------------- Internal (used by WiFiPan_Portal.cpp handlers) ----------------
          * Public only so free-function httpd handlers (which hold a Manager* via
@@ -159,10 +202,10 @@ namespace WiFiPan
         std::string CurrentIpString() const;
 
         Status StartWebServer();
-        void StopWebServer();
+        void   StopWebServer();
         Status SetCaptivePortalUri();
-        void *StartDns(esp_ip4_addr_t ip);
-        void StopDns(void *dns_handle);
+        void  *StartDns(esp_ip4_addr_t ip);
+        void   StopDns(void *dns_handle);
 
     private:
         struct Impl; // event group, netif, httpd handle, task handle... (see WiFiPan_Internal.hpp)
@@ -170,23 +213,23 @@ namespace WiFiPan
         /* ---- ESP-IDF event trampolines (require free/static function + void*) ---- */
         static void StaEventTrampoline(void *arg, esp_event_base_t base, int32_t id, void *data);
         static void ApEventTrampoline(void *arg, esp_event_base_t base, int32_t id, void *data);
-        void HandleStaEvent(esp_event_base_t base, int32_t id, void *data);
-        void HandleApEvent(esp_event_base_t base, int32_t id, void *data);
+        void        HandleStaEvent(esp_event_base_t base, int32_t id, void *data);
+        void        HandleApEvent(esp_event_base_t base, int32_t id, void *data);
 
-        bool LoadSavedCredsFromNvs();
+        bool                    LoadSavedCredsFromNvs();
         static wifi_ap_config_t DefaultApConfig();
 
-        wifi_ap_config_t ap_config_{};
+        wifi_ap_config_t  ap_config_{};
         wifi_sta_config_t sta_config_{};
-        int sta_retry_num_ = -1;
-        uint16_t scan_max_count_ = 0;
+        int               sta_retry_num_  = -1;
+        uint16_t          scan_max_count_ = 0;
 
         Page page_;
 
-        ConnectedCb connected_cb_ = nullptr;
+        ConnectedCb    connected_cb_    = nullptr;
         DisconnectedCb disconnected_cb_ = nullptr;
 
-        std::unique_ptr<Impl> priv_;
+        std::unique_ptr<Impl>            priv_;
         std::array<char, kAdminTokenLen> admin_token_{};
     };
 

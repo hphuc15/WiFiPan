@@ -35,10 +35,10 @@ namespace WiFiPan
         esp_event_handler_instance_t sta_disc_handle        = nullptr;
         esp_event_handler_instance_t ip_handle              = nullptr;
 
-        esp_netif_t   *netif = nullptr;
-        int            sta_retry_remaining = 0;
-        httpd_handle_t server = nullptr;
+        esp_netif_t   *netif               = nullptr;
+        httpd_handle_t server              = nullptr;
         TaskHandle_t   portal_waiting_task = nullptr;
+        int            sta_retry_remaining = 0;
     };
 
 } /* WiFiPan */
