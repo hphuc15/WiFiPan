@@ -85,6 +85,8 @@ extern "C"
     const char    *WiFiPan_Page_GetParam(const WiFiPan_t *m, const char *id);
     bool           WiFiPan_Page_SetParamValue(WiFiPan_t *m, const char *id, const char *value);
     size_t         WiFiPan_Page_Count(const WiFiPan_t *m);
+    WiFiPan_Status WiFiPan_Page_SaveToNvs(const WiFiPan_t *m, const char *nvs_namespace);
+    WiFiPan_Status WiFiPan_Page_LoadFromNvs(WiFiPan_t *m, const char *nvs_namespace);
 
 #ifdef __cplusplus
 }

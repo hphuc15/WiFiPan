@@ -1,5 +1,6 @@
 #include "WiFiPan.hpp"
 #include "WiFiPan_Html.h"
+#include "nvs.h"
 
 #include <cstring>
 #include <string>
@@ -197,6 +198,66 @@ namespace WiFiPan
 
         out += CONFIG_HTML;
         return out;
+    }
+
+    Status Page::SaveToNvs(const char *nvs_namespace) const
+    {
+        const char  *ns = (nvs_namespace && nvs_namespace[0] != '\0') ? nvs_namespace : "wifipan_cfg";
+        nvs_handle_t handle;
+        if (nvs_open(ns, NVS_READWRITE, &handle) != ESP_OK)
+        {
+            return Status::InitFailed;
+        }
+
+        esp_err_t err = ESP_OK;
+        for (size_t i = 0; i < used_; ++i)
+        {
+            if (params_[i].id[0] != '\0')
+            {
+                err = nvs_set_str(handle, params_[i].id.data(), params_[i].value.data());
+                if (err != ESP_OK)
+                {
+                    break;
+                }
+            }
+        }
+        if (err == ESP_OK)
+        {
+            err = nvs_commit(handle);
+        }
+        nvs_close(handle);
+        return (err == ESP_OK) ? Status::Ok : Status::InitFailed;
+    }
+
+    Status Page::LoadFromNvs(const char *nvs_namespace)
+    {
+        const char  *ns = (nvs_namespace && nvs_namespace[0] != '\0') ? nvs_namespace : "wifipan_cfg";
+        nvs_handle_t handle;
+        esp_err_t    err = nvs_open(ns, NVS_READONLY, &handle);
+        if (err == ESP_ERR_NVS_NOT_FOUND)
+        {
+            return Status::NoCreds;
+        }
+        if (err != ESP_OK)
+        {
+            return Status::InitFailed;
+        }
+
+        for (size_t i = 0; i < used_; ++i)
+        {
+            if (params_[i].id[0] == '\0')
+            {
+                continue;
+            }
+            char   buf[kFieldLen] = {0};
+            size_t len            = sizeof(buf);
+            if (nvs_get_str(handle, params_[i].id.data(), buf, &len) == ESP_OK)
+            {
+                CopyField(params_[i].value, buf);
+            }
+        }
+        nvs_close(handle);
+        return Status::Ok;
     }
 
 } // namespace WiFiPan

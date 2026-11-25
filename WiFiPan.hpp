@@ -73,6 +73,12 @@ namespace WiFiPan
          */
         bool SetParamValue(const char *id, const char *value);
 
+        /** @brief Persist all registered parameter values to an NVS namespace. */
+        Status SaveToNvs(const char *nvs_namespace = "wifipan_cfg") const;
+
+        /** @brief Load persisted values for registered parameters from an NVS namespace. */
+        Status LoadFromNvs(const char *nvs_namespace = "wifipan_cfg");
+
         /** Build the dynamic extra-field HTML fragment for /config. */
         std::string BuildFieldsHtml() const;
 

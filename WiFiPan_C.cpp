@@ -153,3 +153,21 @@ size_t WiFiPan_Page_Count(const WiFiPan_t *m)
 {
     return m->impl.page().count();
 }
+
+WiFiPan_Status WiFiPan_Page_SaveToNvs(const WiFiPan_t *m, const char *nvs_namespace)
+{
+    if (!m)
+    {
+        return WIFIPAN_INVALID_ARG;
+    }
+    return ToC(m->impl.page().SaveToNvs(nvs_namespace));
+}
+
+WiFiPan_Status WiFiPan_Page_LoadFromNvs(WiFiPan_t *m, const char *nvs_namespace)
+{
+    if (!m)
+    {
+        return WIFIPAN_INVALID_ARG;
+    }
+    return ToC(m->impl.page().LoadFromNvs(nvs_namespace));
+}
