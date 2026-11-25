@@ -2,6 +2,10 @@
 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), và dự án tuân thủ [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-25
+### Thêm mới
+- Thêm hàm `SaveToNvs()` / `LoadFromNvs()` (`WiFiPan_Page_SaveToNvs()` / `WiFiPan_Page_LoadFromNvs()`) để lưu và đọc lại các tham số portal trên NVS.
+
 ## [2.0.0] - 2026-08-30
 ### Thay đổi
 - `Thay đổi phá vỡ tương thích`: Đổi tên file `WiFiPan_C.h` thành `WiFiPan.h` đóng vai trò làm header C API chuẩn duy nhất.

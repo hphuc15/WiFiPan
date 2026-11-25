@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-25
+### Added
+- Added `SaveToNvs()` / `LoadFromNvs()` (`WiFiPan_Page_SaveToNvs()` / `WiFiPan_Page_LoadFromNvs()`) to persist and restore portal parameters in NVS.
+
 ## [2.0.0] - 2026-08-30
 ### Changed
 - `Breaking Change`: Renamed `WiFiPan_C.h` to `WiFiPan.h` as the unified C API header.
